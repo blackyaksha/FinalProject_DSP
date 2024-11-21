@@ -18,6 +18,9 @@ import os
 import pickle
 
 @st.cache_resource
+
+working_dir = os.path.dirname(os.path.abspath(__file__))
+
 def load_model():
     # Update this path to point to where your 'autoencoder.h5' file is located
     model = pickle.load(open(f'{working_dir}/autoencoder.h5', 'rb'))
