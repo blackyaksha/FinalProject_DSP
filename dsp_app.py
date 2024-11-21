@@ -19,20 +19,19 @@ import pickle
 
 @st.cache_resource
 def load_model():
-    # Update this path to point to where your 'autoencoder.h5' file is located  
-    model = tf.keras.models.load_model('autoencoder.h5')
+    # Update this path to point to where your 'autoencoder.h5' file is located
+    model = pickle.load(open(f'{working_dir}/autoencoder.h5', 'rb'))
     return model
 
 model = load_model()
 
 st.write("""
-# Text Detection and Extraction
-### By Tacsay & Yu
+# Plant Leaf Detection System by Jonathan
 """)
 
 truth = st.text_input('Actual Text')
 
-file = st.file_uploader("Choose document image", type=["jpg", "png"])
+file = st.file_uploader("Choose plant photo from computer", type=["jpg", "png"])
 
 def denoise(image):
     size = (612, 360)
@@ -114,39 +113,36 @@ if st.button("Process"):
         st.text("Please upload an image file")
     else:
         image = Image.open(file)
-        st.image(image, use_column_width=True)
+        st.image(image, caption="Original Image", use_column_width=True)
 
-        # Denoise the image
+        # Denoising step
         denoised_image_array = denoise(image)
-
-        # Convert denoised image to uint8 for display
         denoised_image_uint8 = (denoised_image_array * 255).astype('uint8')
-
-        # Display denoised image in Streamlit
         st.image(denoised_image_uint8, caption="Denoised Image", use_column_width=True)
 
+        # Sharpening step
         kernel = np.array([[0, -1, 0], [-1, 5, -1], [0, -1, 0]])
         sharpened_image = cv2.filter2D(denoised_image_uint8, -1, kernel)
+        st.image(sharpened_image, caption="Sharpened Image", use_column_width=True)
 
-        scale_percent = 150
-        width = int(sharpened_image.shape[1] * (scale_percent / 100))
-        height = int(sharpened_image.shape[0] * (scale_percent / 100))
+        # Thresholding step
+        _, im_bw = cv2.threshold(sharpened_image, 185, 255, cv2.THRESH_BINARY)
+        st.image(im_bw, caption="Thresholded Image", use_column_width=True)
 
-        resized_image = cv2.resize(sharpened_image, (width, height), interpolation=cv2.INTER_LINEAR)
-
-        _, im_bw = cv2.threshold(resized_image, 185, 255, cv2.THRESH_BINARY)
+        # Canny Edge Detection step
         edges = canny_edge_detection(im_bw)
+        st.image(edges, caption="Canny Edge Detection", use_column_width=True)
 
+        # Find and draw contours
         target1 = find_contours(edges)
         if target1 is not None:
-            output = draw_contours(resized_image, sharpened_image, target1)
+            output = draw_contours(sharpened_image, sharpened_image, target1)
             text = pytesseract.image_to_string(output)
             wer_calc, accuracy_wer = calculate_wer(text, truth)
             cer_calc, accuracy_cer = calculate_cer(text, truth)
 
             text_data = pytesseract.image_to_data(output, output_type='data.frame')
             text_data = text_data[text_data.conf != -1]
-
             lines = text_data.groupby(['page_num', 'block_num', 'par_num', 'line_num'])['text'].apply(lambda x: ' '.join(list(x))).tolist()
             confs = text_data.groupby(['page_num', 'block_num', 'par_num', 'line_num'])['conf'].mean().tolist()
             line_conf = []
@@ -159,8 +155,9 @@ if st.button("Process"):
                 if lines[i].strip():
                     line_conf.append((lines[i], round(confs[i], 3)))
 
-            string = f"Detected Text:\n{text}\n\nWER Accuracy: {accuracy_wer:.2f}% | CER Accuracy: {accuracy_cer:.2f}%"
+            string = f"OUTPUT : WER Accuracy: {wer_calc}%, CER Accuracy: {cer_calc}%, Avg. Confidence: {average_conf}%"
             st.success(string)
+        else:
+            st.error("Could not find contours in the image.")
 
-working_dir = os.path.dirname(os.path.abspath(__file__))
 st.write(f"Working Directory: {working_dir}")
