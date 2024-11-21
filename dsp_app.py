@@ -17,8 +17,7 @@ import pytesseract
 import os
 import pickle
 
-@st.cache_resource
-
+# Define working directory correctly
 working_dir = os.path.dirname(os.path.abspath(__file__))
 
 def load_model():
@@ -162,6 +161,3 @@ if st.button("Process"):
             st.success(string)
         else:
             st.error("Could not find contours in the image.")
-
-st.write(f"Working Directory: {working_dir}")
-working_dir = os.path.dirname(os.path.abspath(__file__))
