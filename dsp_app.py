@@ -17,6 +17,8 @@ import pytesseract
 import os
 import pickle
 
+@st.cache_resource
+
 # Define working directory correctly
 working_dir = os.path.dirname(os.path.abspath(__file__))
 
