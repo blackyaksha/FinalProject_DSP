@@ -163,3 +163,5 @@ if st.button("Process"):
             st.success(string)
         else:
             st.error("Could not find contours in the image.")
+
+st.write(f"Working Directory: {working_dir}")
