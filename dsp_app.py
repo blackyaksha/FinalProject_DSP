@@ -162,4 +162,5 @@ if st.button("Process"):
             string = f"Detected Text:\n{text}\n\nWER Accuracy: {accuracy_wer:.2f}% | CER Accuracy: {accuracy_cer:.2f}%"
             st.success(string)
 
+working_dir = os.path.dirname(os.path.abspath(__file__))
 st.write(f"Working Directory: {working_dir}")
