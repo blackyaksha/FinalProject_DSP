@@ -18,7 +18,6 @@ import os
 import pickle
 
 @st.cache_resource
-
 def load_model():
     # Update this path to point to where your 'autoencoder.h5' file is located  
     model = tf.keras.models.load_model('autoencoder.h5')
@@ -129,6 +128,8 @@ if st.button("Process"):
         kernel = np.array([[0, -1, 0], [-1, 5, -1], [0, -1, 0]])
         sharpened_image = cv2.filter2D(denoised_image_uint8, -1, kernel)
 
+        st.image(sharpened_image, caption="Sharpened Image", use_column_width=True)
+
         scale_percent = 150
         width = int(sharpened_image.shape[1] * (scale_percent / 100))
         height = int(sharpened_image.shape[0] * (scale_percent / 100))
@@ -136,7 +137,10 @@ if st.button("Process"):
         resized_image = cv2.resize(sharpened_image, (width, height), interpolation=cv2.INTER_LINEAR)
 
         _, im_bw = cv2.threshold(resized_image, 185, 255, cv2.THRESH_BINARY)
+        st.image(im_bw, caption="Binary Image", use_column_width=True)
+
         edges = canny_edge_detection(im_bw)
+        st.image(edges, caption="Edges", use_column_width=True)
 
         target1 = find_contours(edges)
         if target1 is not None:
