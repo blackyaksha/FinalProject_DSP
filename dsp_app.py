@@ -27,7 +27,7 @@ model = load_model()
 
 st.write("""
 # Text Detection and Extraction
-### By Tacsay & Yu
+### By Group1: Balwang, Beato, Laxamana, Tacsay, Yu
 """)
 
 truth = st.text_input('Actual Text')
